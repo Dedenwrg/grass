@@ -4,6 +4,7 @@ import ssl
 import json
 import time
 import uuid
+import os
 import requests
 import shutil
 from loguru import logger
@@ -28,7 +29,6 @@ async def connect_to_wss(socks5_proxy, user_id):
             ssl_context.verify_mode = ssl.CERT_NONE
             urilist = ["wss://proxy.wynd.network:4444/","wss://proxy.wynd.network:4650/"]
             uri = random.choice(urilist)
-            #uri = "wss://proxy.wynd.network:4650/"
             server_hostname = "proxy.wynd.network"
             proxy = Proxy.from_url(socks5_proxy)
             async with proxy_connect(uri, proxy=proxy, ssl=ssl_context, server_hostname=server_hostname,
@@ -75,13 +75,17 @@ async def connect_to_wss(socks5_proxy, user_id):
 
 
 async def main():
-    #find user_id on the site in conlose localStorage.getItem('userId') (if you can't get it, write allow pasting)
-    _user_id = input('Please Enter your user ID: ')
+    # Mendapatkan user_id dari variabel lingkungan
+    _user_id = os.getenv("USER_ID")
+    if not _user_id:
+        _user_id = input('Please Enter your user ID: ')
+        
     with open('local_proxies.txt', 'r') as file:
-            local_proxies = file.read().splitlines()
+        local_proxies = file.read().splitlines()
+        
     tasks = [asyncio.ensure_future(connect_to_wss(i, _user_id)) for i in local_proxies]
     await asyncio.gather(*tasks)
 
 if __name__ == '__main__':
-    #letsgo
+    # Memulai aplikasi
     asyncio.run(main())
